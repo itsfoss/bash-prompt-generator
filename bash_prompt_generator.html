@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bash Prompt Generator - It's FOSS</title>
+    <style>
+        /* Catppuccin Mocha Color Palette */
+        :root {
+            --ctp-rosewater: #f5e0dc;
+            --ctp-flamingo: #f2cdcd;
+            --ctp-pink: #f5c2e7;
+            --ctp-mauve: #cba6f7;
+            --ctp-red: #f38ba8;
+            --ctp-maroon: #eba0ac;
+            --ctp-peach: #fab387;
+            --ctp-yellow: #f9e2af;
+            --ctp-green: #a6e3a1;
+            --ctp-teal: #94e2d5;
+            --ctp-sky: #89dceb;
+            --ctp-sapphire: #74c7ec;
+            --ctp-blue: #89b4fa;
+            --ctp-lavender: #b4befe;
+            --ctp-text: #cdd6f4;
+            --ctp-subtext1: #bac2de;
+            --ctp-subtext0: #a6adc8;
+            --ctp-overlay2: #9399b2;
+            --ctp-overlay1: #7f849c;
+            --ctp-overlay0: #6c7086;
+            --ctp-surface2: #585b70;
+            --ctp-surface1: #45475a;
+            --ctp-surface0: #313244;
+            --ctp-base: #1e1e2e;
+            --ctp-mantle: #181825;
+            --ctp-crust: #11111b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--ctp-base);
+            color: var(--ctp-text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--ctp-surface0), var(--ctp-surface1));
+            border-radius: 12px;
+            border: 1px solid var(--ctp-surface2);
+        }
+
+        .header h1 {
+            color: var(--ctp-mauve);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            color: var(--ctp-subtext1);
+            font-size: 1.1em;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .control-panel {
+            background: var(--ctp-surface0);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--ctp-surface2);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .preview-panel {
+            background: var(--ctp-surface0);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--ctp-surface2);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .section-title {
+            color: var(--ctp-blue);
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--ctp-surface2);
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--ctp-subtext1);
+            font-weight: 500;
+        }
+
+        .sortable-info {
+            background: var(--ctp-surface1);
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            color: var(--ctp-subtext1);
+            border: 1px solid var(--ctp-surface2);
+        }
+
+        .sortable-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .sortable-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: var(--ctp-surface1);
+            border-radius: 8px;
+            border: 1px solid var(--ctp-surface2);
+            transition: all 0.3s ease;
+            cursor: move;
+            user-select: none;
+        }
+
+        .sortable-item:hover {
+            background: var(--ctp-surface2);
+            border-color: var(--ctp-blue);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .sortable-item.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+
+        .sortable-item.drag-over {
+            border-color: var(--ctp-green);
+            background: var(--ctp-surface2);
+        }
+
+        .drag-handle {
+            color: var(--ctp-overlay1);
+            font-weight: bold;
+            margin-right: 12px;
+            cursor: grab;
+            user-select: none;
+            transition: color 0.3s ease;
+            font-size: 16px;
+            line-height: 1;
+            padding: 2px;
+        }
+
+        .drag-handle:hover {
+            color: var(--ctp-blue);
+        }
+
+        .sortable-item[draggable="true"] {
+            cursor: move;
+        }
+
+        .sortable-item[draggable="true"]:active .drag-handle {
+            cursor: grabbing;
+        }
+
+        .sortable-item input[type="checkbox"] {
+            margin-right: 10px;
+            accent-color: var(--ctp-blue);
+            transform: scale(1.2);
+        }
+
+        .sortable-item label {
+            margin: 0;
+            cursor: pointer;
+            color: var(--ctp-text);
+            flex-grow: 1;
+        }
+
+        .color-picker-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+        }
+
+        .color-picker-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px;
+            background: var(--ctp-surface1);
+            border-radius: 8px;
+            border: 1px solid var(--ctp-surface2);
+        }
+
+        .color-picker-item label {
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            color: var(--ctp-subtext1);
+        }
+
+        .color-picker-item input[type="color"] {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            background: none;
+        }
+
+        .terminal {
+            background: var(--ctp-mantle);
+            border: 2px solid var(--ctp-surface2);
+            border-radius: 8px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+            min-height: 200px;
+            overflow-x: auto;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--ctp-surface2);
+        }
+
+        .terminal-dots {
+            display: flex;
+            gap: 8px;
+            margin-right: 15px;
+        }
+
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .terminal-dot.red { background: var(--ctp-red); }
+        .terminal-dot.yellow { background: var(--ctp-yellow); }
+        .terminal-dot.green { background: var(--ctp-green); }
+
+        .terminal-title {
+            color: var(--ctp-subtext1);
+            font-size: 12px;
+        }
+
+        .prompt-line {
+            margin-bottom: 10px;
+            word-wrap: break-word;
+        }
+
+        .output-section {
+            background: var(--ctp-surface0);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--ctp-surface2);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .output-box {
+            background: var(--ctp-mantle);
+            border: 1px solid var(--ctp-surface2);
+            border-radius: 8px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: var(--ctp-text);
+            word-break: break-all;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .copy-button {
+            background: linear-gradient(135deg, var(--ctp-blue), var(--ctp-sapphire));
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(137, 180, 250, 0.3);
+        }
+
+        .copy-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(137, 180, 250, 0.4);
+        }
+
+        .copy-button:active {
+            transform: translateY(0);
+        }
+
+        .instructions {
+            background: var(--ctp-surface0);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--ctp-surface2);
+            margin-top: 20px;
+        }
+
+        .instructions h3 {
+            color: var(--ctp-green);
+            margin-bottom: 15px;
+        }
+
+        .instructions ol {
+            color: var(--ctp-subtext1);
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        .instructions code {
+            background: var(--ctp-mantle);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--ctp-text);
+            font-family: 'Courier New', monospace;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .color-picker-group {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .sortable-item {
+                padding: 10px;
+            }
+            
+            .drag-handle {
+                margin-right: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐧 Bash Prompt Generator</h1>
+            <p>Create beautiful and functional bash prompts with ease</p>
+        </div>
+
+        <div class="main-content">
+            <div class="control-panel">
+                <h2 class="section-title">⚙️ Configure Your Prompt</h2>
+                
+                <div class="control-group">
+                    <label>Select & Reorder Elements:</label>
+                    <div class="sortable-info">
+                        <span>💡 Drag and drop to reorder elements</span>
+                    </div>
+                    <div class="sortable-list" id="sortable-elements">
+                        <div class="sortable-item" data-element="username">
+                            <div class="drag-handle">⋮⋮</div>
+                            <input type="checkbox" id="username" checked>
+                            <label for="username">Username</label>
+                        </div>
+                        <div class="sortable-item" data-element="hostname">
+                            <div class="drag-handle">⋮⋮</div>
+                            <input type="checkbox" id="hostname" checked>
+                            <label for="hostname">Hostname</label>
+                        </div>
+                        <div class="sortable-item" data-element="workingdir">
+                            <div class="drag-handle">⋮⋮</div>
+                            <input type="checkbox" id="workingdir" checked>
+                            <label for="workingdir">Working Directory</label>
+                        </div>
+                        <div class="sortable-item" data-element="gitbranch">
+                            <div class="drag-handle">⋮⋮</div>
+                            <input type="checkbox" id="gitbranch">
+                            <label for="gitbranch">Git Branch</label>
+                        </div>
+                        <div class="sortable-item" data-element="datetime">
+                            <div class="drag-handle">⋮⋮</div>
+                            <input type="checkbox" id="datetime">
+                            <label for="datetime">Date & Time</label>
+                        </div>
+                        <div class="sortable-item" data-element="exitcode">
+                            <div class="drag-handle">⋮⋮</div>
+                            <input type="checkbox" id="exitcode">
+                            <label for="exitcode">Exit Code</label>
+                        </div>
+                        <div class="sortable-item" data-element="ipaddress">
+                            <div class="drag-handle">⋮⋮</div>
+                            <input type="checkbox" id="ipaddress">
+                            <label for="ipaddress">IP Address</label>
+                        </div>
+                        <div class="sortable-item" data-element="shell">
+                            <div class="drag-handle">⋮⋮</div>
+                            <input type="checkbox" id="shell">
+                            <label for="shell">Shell Type</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label>Colors:</label>
+                    <div class="color-picker-group">
+                        <div class="color-picker-item">
+                            <label for="usercolor">User</label>
+                            <input type="color" id="usercolor" value="#a6e3a1">
+                        </div>
+                        <div class="color-picker-item">
+                            <label for="hostcolor">Host</label>
+                            <input type="color" id="hostcolor" value="#89b4fa">
+                        </div>
+                        <div class="color-picker-item">
+                            <label for="pathcolor">Path</label>
+                            <input type="color" id="pathcolor" value="#f9e2af">
+                        </div>
+                        <div class="color-picker-item">
+                            <label for="gitcolor">Git</label>
+                            <input type="color" id="gitcolor" value="#f5c2e7">
+                        </div>
+                        <div class="color-picker-item">
+                            <label for="timecolor">Time</label>
+                            <input type="color" id="timecolor" value="#94e2d5">
+                        </div>
+                        <div class="color-picker-item">
+                            <label for="symbolcolor">Symbol</label>
+                            <input type="color" id="symbolcolor" value="#cdd6f4">
+                        </div>
+                        <div class="color-picker-item">
+                            <label for="ipcolor">IP Address</label>
+                            <input type="color" id="ipcolor" value="#fab387">
+                        </div>
+                        <div class="color-picker-item">
+                            <label for="shellcolor">Shell</label>
+                            <input type="color" id="shellcolor" value="#cba6f7">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="preview-panel">
+                <h2 class="section-title">👁️ Live Preview</h2>
+                
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-dots">
+                            <div class="terminal-dot red"></div>
+                            <div class="terminal-dot yellow"></div>
+                            <div class="terminal-dot green"></div>
+                        </div>
+                        <div class="terminal-title">Terminal</div>
+                    </div>
+                    
+                    <div id="prompt-preview">
+                        <div class="prompt-line" id="preview-line"></div>
+                        <div class="prompt-line">$ ls -la</div>
+                        <div class="prompt-line">total 24</div>
+                        <div class="prompt-line">drwxr-xr-x  3 user user 4096 Jan 15 10:30 .</div>
+                        <div class="prompt-line">drwxr-xr-x 15 user user 4096 Jan 15 10:25 ..</div>
+                        <div class="prompt-line">-rw-r--r--  1 user user  220 Jan 15 10:30 .bashrc</div>
+                        <div class="prompt-line" id="preview-line-2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="output-section">
+            <h2 class="section-title">📋 Generated PS1 Variable</h2>
+            <div class="output-box" id="ps1-output">
+                PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+            </div>
+            <button class="copy-button" onclick="copyToClipboard()">📋 Copy PS1 to Clipboard</button>
+        </div>
+
+        <div class="instructions">
+            <h3>🚀 How to Use Your Custom Prompt</h3>
+            <ol>
+                <li>Copy the generated PS1 variable above</li>
+                <li>Open your terminal and paste the command to test it temporarily</li>
+                <li>To make it permanent, add it to your <code>~/.bashrc</code> or <code>~/.bash_profile</code> file</li>
+                <li>Run <code>source ~/.bashrc</code> or restart your terminal to apply the changes</li>
+                <li>Enjoy your new custom bash prompt!</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Color conversion utilities
+        function hexToAnsi(hex) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `\\033[38;2;${r};${g};${b}m`;
+        }
+
+        function generatePS1() {
+            const elements = [];
+            const username = document.getElementById('username').checked;
+            const hostname = document.getElementById('hostname').checked;
+            const workingdir = document.getElementById('workingdir').checked;
+            const gitbranch = document.getElementById('gitbranch').checked;
+            const datetime = document.getElementById('datetime').checked;
+            const exitcode = document.getElementById('exitcode').checked;
+
+            const userColor = document.getElementById('usercolor').value;
+            const hostColor = document.getElementById('hostcolor').value;
+            const pathColor = document.getElementById('pathcolor').value;
+            const gitColor = document.getElementById('gitcolor').value;
+            const timeColor = document.getElementById('timecolor').value;
+            const symbolColor = document.getElementById('symbolcolor').value;
+
+            let ps1 = "PS1='";
+            
+            // Exit code (if enabled, shown first)
+            if (exitcode) {
+                ps1 += '\\[\\033[38;2;248;184;135m\\]\\(?:\\[\\033[38;2;243;139;168m\\]\\?\\[\\033[38;2;248;184;135m\\]\\)\\[\\033[0m\\] ';
+            }
+
+            // Date and time
+            if (datetime) {
+                ps1 += `\\[${hexToAnsi(timeColor)}\\]\\d \\t\\[\\033[0m\\] `;
+            }
+
+            // Username and hostname
+            if (username && hostname) {
+                ps1 += `\\[${hexToAnsi(userColor)}\\]\\u\\[\\033[0m\\]@\\[${hexToAnsi(hostColor)}\\]\\h\\[\\033[0m\\]:`;
+            } else if (username) {
+                ps1 += `\\[${hexToAnsi(userColor)}\\]\\u\\[\\033[0m\\]:`;
+            } else if (hostname) {
+                ps1 += `\\[${hexToAnsi(hostColor)}\\]\\h\\[\\033[0m\\]:`;
+            }
+
+            // Working directory
+            if (workingdir) {
+                ps1 += `\\[${hexToAnsi(pathColor)}\\]\\w\\[\\033[0m\\]`;
+            }
+
+            // Git branch
+            if (gitbranch) {
+                ps1 += ` \\[${hexToAnsi(gitColor)}\\]$(git branch 2>/dev/null | grep '^\\*' | colrm 1 2 | sed 's/^/ (/' | sed 's/$/)/')\\[\\033[0m\\]`;
+            }
+
+            // Prompt symbol
+            ps1 += `\\[${hexToAnsi(symbolColor)}\\]\\$ \\[\\033[0m\\]`;
+            
+            ps1 += "'";
+            
+            return ps1;
+        }
+
+        function generatePreview() {
+            const sortableItems = document.querySelectorAll('.sortable-item');
+            const userColor = document.getElementById('usercolor').value;
+            const hostColor = document.getElementById('hostcolor').value;
+            const pathColor = document.getElementById('pathcolor').value;
+            const gitColor = document.getElementById('gitcolor').value;
+            const timeColor = document.getElementById('timecolor').value;
+            const symbolColor = document.getElementById('symbolcolor').value;
+            const ipColor = document.getElementById('ipcolor').value;
+            const shellColor = document.getElementById('shellcolor').value;
+
+            let preview = '';
+            
+            // Process elements in their current order
+            sortableItems.forEach(item => {
+                const elementType = item.dataset.element;
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                
+                if (!checkbox.checked) return;
+                
+                switch(elementType) {
+                    case 'exitcode':
+                        preview += `<span style="color: #fab387">(</span><span style="color: #f38ba8">0</span><span style="color: #fab387">)</span> `;
+                        break;
+                    case 'datetime':
+                        const now = new Date();
+                        const dateStr = now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: '2-digit' });
+                        const timeStr = now.toLocaleTimeString('en-US', { hour12: false });
+                        preview += `<span style="color: ${timeColor}">${dateStr} ${timeStr}</span> `;
+                        break;
+                    case 'shell':
+                        preview += `<span style="color: ${shellColor}">bash</span> `;
+                        break;
+                    case 'ipaddress':
+                        preview += `<span style="color: ${ipColor}">192.168.1.100</span> `;
+                        break;
+                    case 'username':
+                        // Check if hostname is also enabled and comes right after username
+                        const nextItem = item.nextElementSibling;
+                        const hostnameEnabled = nextItem && 
+                                               nextItem.dataset.element === 'hostname' && 
+                                               nextItem.querySelector('input[type="checkbox"]').checked;
+                        
+                        if (hostnameEnabled) {
+                            preview += `<span style="color: ${userColor}">user</span>@<span style="color: ${hostColor}">itsfoss</span>:`;
+                            // Skip the hostname item since we processed it here
+                            const hostnameItem = nextItem;
+                            hostnameItem.setAttribute('data-processed', 'true');
+                        } else {
+                            preview += `<span style="color: ${userColor}">user</span>:`;
+                        }
+                        break;
+                    case 'hostname':
+                        // Only process if not already processed with username
+                        if (!item.hasAttribute('data-processed')) {
+                            preview += `<span style="color: ${hostColor}">itsfoss</span>:`;
+                        } else {
+                            item.removeAttribute('data-processed');
+                        }
+                        break;
+                    case 'workingdir':
+                        preview += `<span style="color: ${pathColor}">~/projects/bash-prompt</span>`;
+                        break;
+                    case 'gitbranch':
+                        preview += ` <span style="color: ${gitColor}">(main)</span>`;
+                        break;
+                }
+            });
+
+            // Always add prompt symbol at the end
+            preview += ` <span style="color: ${symbolColor}">$ </span>`;
+
+            document.getElementById('preview-line').innerHTML = preview;
+            document.getElementById('preview-line-2').innerHTML = preview;
+        }
+
+        function updateOutput() {
+            const ps1 = generatePS1();
+            document.getElementById('ps1-output').textContent = ps1;
+            generatePreview();
+        }
+
+        function copyToClipboard() {
+            const ps1Output = document.getElementById('ps1-output').textContent;
+            navigator.clipboard.writeText(ps1Output).then(function() {
+                const button = document.querySelector('.copy-button');
+                const originalText = button.textContent;
+                button.textContent = '✅ Copied!';
+                button.style.background = 'linear-gradient(135deg, var(--ctp-green), var(--ctp-teal))';
+                
+                setTimeout(function() {
+                    button.textContent = originalText;
+                    button.style.background = 'linear-gradient(135deg, var(--ctp-blue), var(--ctp-sapphire))';
+                }, 2000);
+            });
+        }
+
+        // Drag and Drop functionality
+        let draggedElement = null;
+        let isDragging = false;
+
+        function initializeDragAndDrop() {
+            const sortableList = document.getElementById('sortable-elements');
+            
+            // Add event listeners to the container
+            sortableList.addEventListener('dragover', handleDragOver);
+            sortableList.addEventListener('drop', handleDrop);
+            
+            updateDragHandlers();
+        }
+
+        function updateDragHandlers() {
+            const sortableItems = document.querySelectorAll('.sortable-item');
+            
+            sortableItems.forEach((item) => {
+                // Remove existing listeners
+                item.removeEventListener('dragstart', handleDragStart);
+                item.removeEventListener('dragend', handleDragEnd);
+                item.removeEventListener('dragenter', handleDragEnter);
+                item.removeEventListener('dragleave', handleDragLeave);
+                
+                // Add fresh listeners
+                item.draggable = true;
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragend', handleDragEnd);
+                item.addEventListener('dragenter', handleDragEnter);
+                item.addEventListener('dragleave', handleDragLeave);
+            });
+        }
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            isDragging = true;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.outerHTML);
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            draggedElement = null;
+            isDragging = false;
+            
+            // Clean up any remaining drag-over classes
+            document.querySelectorAll('.drag-over').forEach(item => {
+                item.classList.remove('drag-over');
+            });
+        }
+
+        function handleDragOver(e) {
+            if (isDragging) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+            }
+        }
+
+        function handleDragEnter(e) {
+            if (isDragging && draggedElement !== this) {
+                this.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            // Only remove drag-over if we're actually leaving the element
+            if (!this.contains(e.relatedTarget)) {
+                this.classList.remove('drag-over');
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            
+            if (!isDragging || !draggedElement) return;
+            
+            const target = e.target.closest('.sortable-item');
+            if (!target || target === draggedElement) return;
+            
+            const sortableList = document.getElementById('sortable-elements');
+            const allItems = Array.from(sortableList.children);
+            const draggedIndex = allItems.indexOf(draggedElement);
+            const targetIndex = allItems.indexOf(target);
+            
+            // Remove drag-over class
+            target.classList.remove('drag-over');
+            
+            // Perform the reorder
+            if (draggedIndex < targetIndex) {
+                sortableList.insertBefore(draggedElement, target.nextSibling);
+            } else {
+                sortableList.insertBefore(draggedElement, target);
+            }
+            
+            // Update drag handlers for new order
+            updateDragHandlers();
+            
+            // Update the output
+            updateOutput();
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            updateOutput();
+            initializeDragAndDrop();
+            
+            // Add event listeners to all checkboxes and color inputs
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const colorInputs = document.querySelectorAll('input[type="color"]');
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', updateOutput);
+            });
+            
+            colorInputs.forEach(input => {
+                input.addEventListener('input', updateOutput);
+            });
+        });
+    </script>
+</body>
+</html>
