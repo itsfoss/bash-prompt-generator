@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bash Prompt Generator - It's FOSS</title>
     <style>
-        /* Bash Prompt Generator Specific Styles - Scoped to avoid conflicts */
-        .bash-prompt-generator {
-            /* Catppuccin Mocha Color Palette */
+        /* Catppuccin Mocha Color Palette */
+        :root {
             --ctp-rosewater: #f5e0dc;
             --ctp-flamingo: #f2cdcd;
             --ctp-pink: #f5c2e7;
@@ -36,27 +35,27 @@
             --ctp-crust: #11111b;
         }
 
-        .bash-prompt-generator * {
+        * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
         }
 
-        .bash-prompt-generator {
+        body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: var(--ctp-base);
             color: var(--ctp-text);
             min-height: 100vh;
             line-height: 1.6;
-            margin: 0;
-            padding: 0;
         }
 
-        .bash-prompt-generator .container {
+        .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
 
-        .bash-prompt-generator .header {
+        .header {
             text-align: center;
             margin-bottom: 30px;
             padding: 20px;
@@ -65,28 +64,26 @@
             border: 1px solid var(--ctp-surface2);
         }
 
-        .bash-prompt-generator .header h1 {
+        .header h1 {
             color: var(--ctp-mauve);
             font-size: 2.5em;
             margin-bottom: 10px;
             text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
-        .bash-prompt-generator .header p {
+        .header p {
             color: var(--ctp-subtext1);
             font-size: 1.1em;
-            margin: 0;
         }
 
-        .bash-prompt-generator .main-content {
+        .main-content {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 30px;
             margin-bottom: 30px;
         }
 
-        .bash-prompt-generator .control-panel,
-        .bash-prompt-generator .preview-panel {
+        .control-panel {
             background: var(--ctp-surface0);
             padding: 25px;
             border-radius: 12px;
@@ -94,7 +91,15 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
-        .bash-prompt-generator .section-title {
+        .preview-panel {
+            background: var(--ctp-surface0);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--ctp-surface2);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .section-title {
             color: var(--ctp-blue);
             font-size: 1.3em;
             margin-bottom: 20px;
@@ -102,18 +107,18 @@
             border-bottom: 2px solid var(--ctp-surface2);
         }
 
-        .bash-prompt-generator .control-group {
+        .control-group {
             margin-bottom: 25px;
         }
 
-        .bash-prompt-generator .control-group > label {
+        .control-group label {
             display: block;
             margin-bottom: 8px;
             color: var(--ctp-subtext1);
             font-weight: 500;
         }
 
-        .bash-prompt-generator .sortable-info {
+        .sortable-info {
             background: var(--ctp-surface1);
             padding: 8px 12px;
             border-radius: 6px;
@@ -123,13 +128,13 @@
             border: 1px solid var(--ctp-surface2);
         }
 
-        .bash-prompt-generator .sortable-list {
+        .sortable-list {
             display: flex;
             flex-direction: column;
             gap: 8px;
         }
 
-        .bash-prompt-generator .sortable-item {
+        .sortable-item {
             display: flex;
             align-items: center;
             padding: 12px;
@@ -141,26 +146,26 @@
             user-select: none;
         }
 
-        .bash-prompt-generator .sortable-item:hover {
+        .sortable-item:hover {
             background: var(--ctp-surface2);
             border-color: var(--ctp-blue);
             transform: translateY(-1px);
             box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
 
-        .bash-prompt-generator .sortable-item.dragging {
+        .sortable-item.dragging {
             opacity: 0.5;
             transform: rotate(5deg);
             box-shadow: 0 8px 25px rgba(0,0,0,0.3);
             z-index: 1000;
         }
 
-        .bash-prompt-generator .sortable-item.drag-over {
+        .sortable-item.drag-over {
             border-color: var(--ctp-green);
             background: var(--ctp-surface2);
         }
 
-        .bash-prompt-generator .drag-handle {
+        .drag-handle {
             color: var(--ctp-overlay1);
             font-weight: bold;
             margin-right: 12px;
@@ -172,38 +177,38 @@
             padding: 2px;
         }
 
-        .bash-prompt-generator .drag-handle:hover {
+        .drag-handle:hover {
             color: var(--ctp-blue);
         }
 
-        .bash-prompt-generator .sortable-item[draggable="true"] {
+        .sortable-item[draggable="true"] {
             cursor: move;
         }
 
-        .bash-prompt-generator .sortable-item[draggable="true"]:active .drag-handle {
+        .sortable-item[draggable="true"]:active .drag-handle {
             cursor: grabbing;
         }
 
-        .bash-prompt-generator .sortable-item input[type="checkbox"] {
+        .sortable-item input[type="checkbox"] {
             margin-right: 10px;
             accent-color: var(--ctp-blue);
             transform: scale(1.2);
         }
 
-        .bash-prompt-generator .sortable-item label {
+        .sortable-item label {
             margin: 0;
             cursor: pointer;
             color: var(--ctp-text);
             flex-grow: 1;
         }
 
-        .bash-prompt-generator .color-picker-group {
+        .color-picker-group {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 15px;
         }
 
-        .bash-prompt-generator .color-picker-item {
+        .color-picker-item {
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -213,13 +218,13 @@
             border: 1px solid var(--ctp-surface2);
         }
 
-        .bash-prompt-generator .color-picker-item label {
+        .color-picker-item label {
             margin-bottom: 8px;
             font-size: 0.9em;
             color: var(--ctp-subtext1);
         }
 
-        .bash-prompt-generator .color-picker-item input[type="color"] {
+        .color-picker-item input[type="color"] {
             width: 40px;
             height: 40px;
             border: none;
@@ -228,7 +233,7 @@
             background: none;
         }
 
-        .bash-prompt-generator .terminal {
+        .terminal {
             background: var(--ctp-mantle);
             border: 2px solid var(--ctp-surface2);
             border-radius: 8px;
@@ -241,7 +246,7 @@
             box-shadow: inset 0 2px 8px rgba(0,0,0,0.3);
         }
 
-        .bash-prompt-generator .terminal-header {
+        .terminal-header {
             display: flex;
             align-items: center;
             margin-bottom: 15px;
@@ -249,33 +254,33 @@
             border-bottom: 1px solid var(--ctp-surface2);
         }
 
-        .bash-prompt-generator .terminal-dots {
+        .terminal-dots {
             display: flex;
             gap: 8px;
             margin-right: 15px;
         }
 
-        .bash-prompt-generator .terminal-dot {
+        .terminal-dot {
             width: 12px;
             height: 12px;
             border-radius: 50%;
         }
 
-        .bash-prompt-generator .terminal-dot.red { background: var(--ctp-red); }
-        .bash-prompt-generator .terminal-dot.yellow { background: var(--ctp-yellow); }
-        .bash-prompt-generator .terminal-dot.green { background: var(--ctp-green); }
+        .terminal-dot.red { background: var(--ctp-red); }
+        .terminal-dot.yellow { background: var(--ctp-yellow); }
+        .terminal-dot.green { background: var(--ctp-green); }
 
-        .bash-prompt-generator .terminal-title {
+        .terminal-title {
             color: var(--ctp-subtext1);
             font-size: 12px;
         }
 
-        .bash-prompt-generator .prompt-line {
+        .prompt-line {
             margin-bottom: 10px;
             word-wrap: break-word;
         }
 
-        .bash-prompt-generator .output-section {
+        .output-section {
             background: var(--ctp-surface0);
             padding: 25px;
             border-radius: 12px;
@@ -283,7 +288,7 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
-        .bash-prompt-generator .output-box {
+        .output-box {
             background: var(--ctp-mantle);
             border: 1px solid var(--ctp-surface2);
             border-radius: 8px;
@@ -296,7 +301,7 @@
             margin-bottom: 15px;
         }
 
-        .bash-prompt-generator .copy-button {
+        .copy-button {
             background: linear-gradient(135deg, var(--ctp-blue), var(--ctp-sapphire));
             color: white;
             border: none;
@@ -308,16 +313,16 @@
             box-shadow: 0 2px 8px rgba(137, 180, 250, 0.3);
         }
 
-        .bash-prompt-generator .copy-button:hover {
+        .copy-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(137, 180, 250, 0.4);
         }
 
-        .bash-prompt-generator .copy-button:active {
+        .copy-button:active {
             transform: translateY(0);
         }
 
-        .bash-prompt-generator .instructions {
+        .instructions {
             background: var(--ctp-surface0);
             padding: 20px;
             border-radius: 12px;
@@ -325,21 +330,21 @@
             margin-top: 20px;
         }
 
-        .bash-prompt-generator .instructions h3 {
+        .instructions h3 {
             color: var(--ctp-green);
             margin-bottom: 15px;
         }
 
-        .bash-prompt-generator .instructions ol {
+        .instructions ol {
             color: var(--ctp-subtext1);
             margin-left: 20px;
         }
 
-        .bash-prompt-generator .instructions li {
+        .instructions li {
             margin-bottom: 8px;
         }
 
-        .bash-prompt-generator .instructions code {
+        .instructions code {
             background: var(--ctp-mantle);
             padding: 2px 6px;
             border-radius: 4px;
@@ -348,25 +353,25 @@
         }
 
         @media (max-width: 768px) {
-            .bash-prompt-generator .main-content {
+            .main-content {
                 grid-template-columns: 1fr;
             }
             
-            .bash-prompt-generator .color-picker-group {
+            .color-picker-group {
                 grid-template-columns: repeat(2, 1fr);
             }
             
-            .bash-prompt-generator .sortable-item {
+            .sortable-item {
                 padding: 10px;
             }
             
-            .bash-prompt-generator .drag-handle {
+            .drag-handle {
                 margin-right: 8px;
             }
         }
     </style>
 </head>
-<body class="bash-prompt-generator">
+<body>
     <div class="container">
         <div class="header">
             <h1>🐧 Bash Prompt Generator</h1>
